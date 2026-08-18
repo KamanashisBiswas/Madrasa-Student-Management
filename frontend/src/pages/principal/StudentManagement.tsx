@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { ClassItem } from '../../types';
-import { Plus, Search, Eye } from 'lucide-react';
+import { Plus, Search, Eye, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export const StudentManagement: React.FC = () => {
@@ -69,13 +69,24 @@ export const StudentManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteStudent = async (studentId: string, name: string) => {
+    if (window.confirm(language === 'bn' ? `আপনি কি নিশ্চিত যে ছাত্র "${name}" এর রেকর্ড ডিলিট করতে চান?` : `Are you sure you want to delete student "${name}"?`)) {
+      try {
+        await api.delete(`/students/${studentId}`);
+        loadData();
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete student');
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{t('studentDirectory')}</h1>
           <p className="text-xs text-slate-500 font-medium">
-            {language === 'bn' ? 'ছাত্র নিবন্ধন ও সকল একাডেমিক তথ্য দেখুন' : 'Register, Search & View Complete Academic Histories'}
+            {language === 'bn' ? 'ছাত্র ভর্তি, প্রোফাইল দেখুন বা রেকর্ড ডিলিট করুন' : 'Register, Search, View Profiles & Manage Student Records'}
           </p>
         </div>
         <button
@@ -155,13 +166,22 @@ export const StudentManagement: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <Link
-                          to={`/principal/students/${std?._id}`}
-                          className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 hover:underline"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>{t('viewProfile')}</span>
-                        </Link>
+                        <div className="flex items-center space-x-3">
+                          <Link
+                            to={`/principal/students/${std?._id}`}
+                            className="inline-flex items-center space-x-1 font-semibold text-emerald-700 hover:text-emerald-900 hover:underline"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>{t('viewProfile')}</span>
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteStudent(std?._id, std?.fullName)}
+                            className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded"
+                            title="Delete Student Record"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { Teacher } from '../../types';
-import { Plus, CheckCircle, XCircle, X } from 'lucide-react';
+import { Plus, X, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export const TeacherManagement: React.FC = () => {
@@ -60,13 +60,24 @@ export const TeacherManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteTeacher = async (teacherId: string, name: string) => {
+    if (window.confirm(language === 'bn' ? `আপনি কি নিশ্চিত যে শিক্ষক "${name}" অ্যাকাউন্টটি ডিলিট করতে চান?` : `Are you sure you want to delete teacher "${name}"?`)) {
+      try {
+        await api.delete(`/teachers/${teacherId}`);
+        loadTeachers();
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete teacher');
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{t('teacherManagement')}</h1>
           <p className="text-xs text-slate-500 font-medium">
-            {language === 'bn' ? 'মাদ্রাসার সকল শিক্ষক একাউন্ট ও দায়িত্বসমূহ পরিচালনা করুন' : 'Manage Faculty Accounts, Roles & Statuses'}
+            {language === 'bn' ? 'মাদ্রাসার সকল শিক্ষক একাউন্ট, এক্টিভেশন ও ডিলিট পরিচালনা করুন' : 'Manage Faculty Accounts, Activation & Removal'}
           </p>
         </div>
         <button
@@ -127,16 +138,25 @@ export const TeacherManagement: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <button
-                        onClick={() => toggleStatus(tItem._id, tItem.status)}
-                        className={`text-xs font-semibold px-2 py-1 rounded border transition ${
-                          tItem.status === 'ACTIVE'
-                            ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                        }`}
-                      >
-                        {tItem.status === 'ACTIVE' ? t('deactivate') : t('activate')}
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => toggleStatus(tItem._id, tItem.status)}
+                          className={`text-xs font-semibold px-2 py-1 rounded border transition ${
+                            tItem.status === 'ACTIVE'
+                              ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          }`}
+                        >
+                          {tItem.status === 'ACTIVE' ? t('deactivate') : t('activate')}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTeacher(tItem._id, tItem.fullName)}
+                          className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded"
+                          title="Delete Teacher Account"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

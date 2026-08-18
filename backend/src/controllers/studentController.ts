@@ -50,7 +50,6 @@ export const getStudents = async (req: Request, res: Response, next: NextFunctio
       .populate('academicYearId')
       .sort({ rollNumber: 1 });
 
-    // Filter by search string if provided
     if (search) {
       const queryStr = String(search).toLowerCase();
       enrollments = enrollments.filter((e: any) => {
@@ -69,7 +68,6 @@ export const getStudents = async (req: Request, res: Response, next: NextFunctio
         const student = e.studentId;
         if (!student) return null;
 
-        // Fetch primary guardian
         const sg = await StudentGuardian.findOne({
           studentId: student._id,
           isPrimaryGuardian: true,
@@ -110,7 +108,6 @@ export const registerStudent = async (req: Request, res: Response, next: NextFun
     const studentId = `STD-${currentYearStr}-${String(count + 1).padStart(3, '0')}`;
     const admissionNumber = `ADM-${currentYearStr}-${String(count + 1).padStart(3, '0')}`;
 
-    // Create Student record
     const student = await Student.create({
       studentId,
       admissionNumber,
@@ -122,7 +119,6 @@ export const registerStudent = async (req: Request, res: Response, next: NextFun
       status: 'ACTIVE',
     });
 
-    // Create or find Guardian record
     let guardian = await Guardian.findOne({ mobile: data.guardianMobile });
     if (!guardian) {
       guardian = await Guardian.create({
@@ -135,7 +131,6 @@ export const registerStudent = async (req: Request, res: Response, next: NextFun
       });
     }
 
-    // Link Student to Guardian
     await StudentGuardian.create({
       studentId: student._id,
       guardianId: guardian._id,
@@ -143,7 +138,6 @@ export const registerStudent = async (req: Request, res: Response, next: NextFun
       isEmergencyContact: true,
     });
 
-    // Create Student Enrollment for active year
     const enrollment = await StudentEnrollment.create({
       studentId: student._id,
       academicYearId: yearId,
@@ -183,7 +177,6 @@ export const getStudentById = async (req: Request, res: Response, next: NextFunc
 
     const studentGuardians = await StudentGuardian.find({ studentId: student._id }).populate('guardianId');
 
-    // Attendance stats
     const totalDays = await ClassAttendance.countDocuments({ studentId: student._id });
     const presentDays = await ClassAttendance.countDocuments({ studentId: student._id, status: 'PRESENT' });
     const absentDays = await ClassAttendance.countDocuments({ studentId: student._id, status: 'ABSENT' });
@@ -212,6 +205,25 @@ export const getStudentById = async (req: Request, res: Response, next: NextFunc
         recentAttendance,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteStudent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    const student = await Student.findByIdAndDelete(id);
+    if (!student) {
+      return next(new ApiError(404, 'Student not found', 'NOT_FOUND'));
+    }
+
+    await StudentEnrollment.deleteMany({ studentId: id });
+    await StudentGuardian.deleteMany({ studentId: id });
+    await ClassAttendance.deleteMany({ studentId: id });
+
+    return sendResponse({ res, message: 'Student record deleted successfully' });
   } catch (error) {
     next(error);
   }

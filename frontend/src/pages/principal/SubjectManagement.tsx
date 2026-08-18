@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { Subject, SubjectAssignment, ClassItem, Teacher } from '../../types';
-import { Plus, BookOpen, X } from 'lucide-react';
+import { Plus, BookOpen, X, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export const SubjectManagement: React.FC = () => {
@@ -72,6 +72,17 @@ export const SubjectManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteSubject = async (subjectId: string, subName: string) => {
+    if (window.confirm(language === 'bn' ? `আপনি কি নিশ্চিত যে "${subName}" বিষয় ডিলিট করতে চান?` : `Are you sure you want to delete "${subName}"?`)) {
+      try {
+        await api.delete(`/subjects/${subjectId}`);
+        loadData();
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete subject');
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -116,9 +127,18 @@ export const SubjectManagement: React.FC = () => {
                     <span className="text-[10px] text-slate-400 font-mono">Code: {sub.code}</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  {sub.status}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {sub.status}
+                  </span>
+                  <button
+                    onClick={() => handleDeleteSubject(sub._id, sub.name)}
+                    className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded"
+                    title="Delete Subject"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -37,6 +37,30 @@ export const createSubject = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+export const updateSubject = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { name, code, description } = req.body;
+    const updated = await Subject.findByIdAndUpdate(id, { name, code, description }, { new: true });
+    if (!updated) return next(new ApiError(404, 'Subject not found', 'NOT_FOUND'));
+    return sendResponse({ res, message: 'Subject updated successfully', data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteSubject = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Subject.findByIdAndDelete(id);
+    if (!deleted) return next(new ApiError(404, 'Subject not found', 'NOT_FOUND'));
+    await SubjectAssignment.deleteMany({ subjectId: id });
+    return sendResponse({ res, message: 'Subject deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getSubjectAssignments = async (req: Request, res: Response, next: NextFunction) => {
   try {
     let activeYear = await AcademicYear.findOne({ isCurrent: true });

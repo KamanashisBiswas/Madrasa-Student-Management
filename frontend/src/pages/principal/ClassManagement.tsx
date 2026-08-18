@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { ClassItem, Teacher } from '../../types';
-import { Plus, GraduationCap, X } from 'lucide-react';
+import { Plus, GraduationCap, X, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export const ClassManagement: React.FC = () => {
@@ -65,6 +65,17 @@ export const ClassManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteClass = async (classId: string, name: string) => {
+    if (window.confirm(language === 'bn' ? `আপনি কি নিশ্চিত যে "${name}" ক্লাসটি ডিলিট করতে চান?` : `Are you sure you want to delete "${name}"?`)) {
+      try {
+        await api.delete(`/classes/${classId}`);
+        loadData();
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete class');
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -73,7 +84,7 @@ export const ClassManagement: React.FC = () => {
             {language === 'bn' ? 'শ্রেণি ব্যবস্থাপনা' : 'Class Management'}
           </h1>
           <p className="text-xs text-slate-500 font-medium">
-            {language === 'bn' ? 'শ্রেণি তৈরি করুন এবং শ্রেণি শিক্ষক নির্ধারণ করুন' : 'Manage Academic Classes and Assign Class Teachers'}
+            {language === 'bn' ? 'শ্রেণি তৈরি করুন, শিক্ষক নির্ধারণ করুন বা ডিলিট করুন' : 'Manage Academic Classes, Assign Class Teachers & Remove Classes'}
           </p>
         </div>
         <button
@@ -98,9 +109,13 @@ export const ClassManagement: React.FC = () => {
                   <span className="text-xs text-slate-500 font-mono">Code: {cls.code}</span>
                 </div>
               </div>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Active
-              </span>
+              <button
+                onClick={() => handleDeleteClass(cls._id, cls.name)}
+                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                title="Delete Class"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="space-y-2 border-t border-b border-slate-100 py-3 text-xs">

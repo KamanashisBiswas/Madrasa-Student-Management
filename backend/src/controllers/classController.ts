@@ -60,6 +60,27 @@ export const createClass = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
+export const updateClass = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { name, code, classTeacherId } = req.body;
+
+    const updated = await ClassModel.findByIdAndUpdate(
+      id,
+      { name, code, classTeacherId: classTeacherId || undefined },
+      { new: true }
+    ).populate('classTeacherId');
+
+    if (!updated) {
+      return next(new ApiError(404, 'Class not found', 'NOT_FOUND'));
+    }
+
+    return sendResponse({ res, message: 'Class updated successfully', data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateClassTeacher = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { classId } = req.params;
@@ -76,6 +97,20 @@ export const updateClassTeacher = async (req: Request, res: Response, next: Next
     }
 
     return sendResponse({ res, message: 'Class Teacher assigned successfully', data: updatedClass });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteClass = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const deleted = await ClassModel.findByIdAndDelete(id);
+    if (!deleted) {
+      return next(new ApiError(404, 'Class not found', 'NOT_FOUND'));
+    }
+
+    return sendResponse({ res, message: 'Class deleted successfully' });
   } catch (error) {
     next(error);
   }

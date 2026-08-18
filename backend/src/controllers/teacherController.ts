@@ -170,6 +170,27 @@ export const updateTeacherStatus = async (req: Request, res: Response, next: Nex
   }
 };
 
+export const deleteTeacher = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const teacher = await Teacher.findById(id);
+    if (!teacher) {
+      return next(new ApiError(404, 'Teacher not found', 'NOT_FOUND'));
+    }
+
+    if (teacher.userId) {
+      await User.findByIdAndDelete(teacher.userId);
+    }
+    await Teacher.findByIdAndDelete(id);
+    await ClassModel.updateMany({ classTeacherId: id }, { $unset: { classTeacherId: '' } });
+    await SubjectAssignment.deleteMany({ teacherId: id });
+
+    return sendResponse({ res, message: 'Teacher deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getMyClasses = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
@@ -186,12 +207,10 @@ export const getMyClasses = async (req: AuthenticatedRequest, res: Response, nex
       return sendResponse({ res, data: [] });
     }
 
-    // Find classes where teacher is Class Teacher
     const classTeacherClasses = await ClassModel.find({
       classTeacherId: user.refId,
     });
 
-    // Find classes where teacher is Subject Teacher
     const subjectAssignments = await SubjectAssignment.find({
       teacherId: user.refId,
       academicYearId: activeYear._id,
