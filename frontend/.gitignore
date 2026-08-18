@@ -1,0 +1,15 @@
+# Node Modules & Vite Build Output
+node_modules/
+dist/
+
+# Environment Files
+.env
+.env.local
+
+# Logs
+*.log
+
+# Editor & OS Files
+.vscode/
+.DS_Store
+Thumbs.db
