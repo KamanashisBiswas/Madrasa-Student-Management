@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { ClassItem } from '../../types';
-import { Plus, Search, UserCheck, Eye, Phone } from 'lucide-react';
+import { Plus, Search, Eye } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const StudentManagement: React.FC = () => {
+  const { t, language } = useLanguage();
   const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,6 @@ export const StudentManagement: React.FC = () => {
   const [bengaliName, setBengaliName] = useState('');
   const [gender, setGender] = useState('MALE');
   const [classId, setClassId] = useState('');
-  const [sectionId, setSectionId] = useState('');
   const [rollNumber, setRollNumber] = useState(1);
   const [guardianName, setGuardianName] = useState('');
   const [guardianRelationship, setGuardianRelationship] = useState('FATHER');
@@ -52,7 +53,6 @@ export const StudentManagement: React.FC = () => {
         bengaliName,
         gender,
         classId,
-        sectionId,
         rollNumber: Number(rollNumber),
         guardianName,
         guardianRelationship,
@@ -69,21 +69,21 @@ export const StudentManagement: React.FC = () => {
     }
   };
 
-  const activeClassObj = classes.find((c) => c._id === classId);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Student Directory & Profiles</h1>
-          <p className="text-xs text-slate-500 font-medium">Register, Search & View Complete Academic Histories</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('studentDirectory')}</h1>
+          <p className="text-xs text-slate-500 font-medium">
+            {language === 'bn' ? 'ছাত্র নিবন্ধন ও সকল একাডেমিক তথ্য দেখুন' : 'Register, Search & View Complete Academic Histories'}
+          </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="inline-flex items-center space-x-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow transition"
         >
           <Plus className="w-4 h-4" />
-          <span>Register New Student</span>
+          <span>{t('registerStudent')}</span>
         </button>
       </div>
 
@@ -95,7 +95,7 @@ export const StudentManagement: React.FC = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name, student ID, roll..."
+            placeholder={language === 'bn' ? 'নাম, আইডি বা রোল খুঁজুন...' : 'Search name, student ID, roll...'}
             className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
@@ -123,14 +123,14 @@ export const StudentManagement: React.FC = () => {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
-                  <th className="py-3 px-4">Roll</th>
-                  <th className="py-3 px-4">Student ID</th>
-                  <th className="py-3 px-4">Full Name</th>
-                  <th className="py-3 px-4">Class & Section</th>
-                  <th className="py-3 px-4">Primary Guardian</th>
-                  <th className="py-3 px-4">Guardian Mobile</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Action</th>
+                  <th className="py-3 px-4">{t('roll')}</th>
+                  <th className="py-3 px-4">{t('studentId')}</th>
+                  <th className="py-3 px-4">{t('fullName')}</th>
+                  <th className="py-3 px-4">{t('classes')}</th>
+                  <th className="py-3 px-4">{t('primaryGuardian')}</th>
+                  <th className="py-3 px-4">{t('guardianMobile')}</th>
+                  <th className="py-3 px-4">{t('status')}</th>
+                  <th className="py-3 px-4">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -145,7 +145,7 @@ export const StudentManagement: React.FC = () => {
                         {std?.bengaliName && <div className="text-[10px] text-slate-500">{std.bengaliName}</div>}
                       </td>
                       <td className="py-3 px-4 font-medium text-slate-700">
-                        {item.class?.name} - {item.section?.name}
+                        {item.class?.name}
                       </td>
                       <td className="py-3 px-4 text-slate-600">{item.primaryGuardian?.fullName || 'N/A'}</td>
                       <td className="py-3 px-4 text-slate-600 font-mono">{item.primaryGuardian?.mobile || 'N/A'}</td>
@@ -160,7 +160,7 @@ export const StudentManagement: React.FC = () => {
                           className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 hover:underline"
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          <span>View Profile</span>
+                          <span>{t('viewProfile')}</span>
                         </Link>
                       </td>
                     </tr>
@@ -176,7 +176,7 @@ export const StudentManagement: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="font-bold text-base text-slate-900 border-b border-slate-100 pb-2">Register Student & Primary Guardian</h3>
+            <h3 className="font-bold text-base text-slate-900 border-b border-slate-100 pb-2">{t('registerStudent')}</h3>
             <form onSubmit={handleRegister} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -189,35 +189,18 @@ export const StudentManagement: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Class</label>
                   <select
                     required
                     value={classId}
-                    onChange={(e) => {
-                      setClassId(e.target.value);
-                      setSectionId('');
-                    }}
+                    onChange={(e) => setClassId(e.target.value)}
                     className="w-full text-sm p-2 border rounded-lg bg-white"
                   >
-                    <option value="">Select</option>
+                    <option value="">Select Class</option>
                     {classes.map((c) => (
                       <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Section</label>
-                  <select
-                    required
-                    value={sectionId}
-                    onChange={(e) => setSectionId(e.target.value)}
-                    className="w-full text-sm p-2 border rounded-lg bg-white"
-                  >
-                    <option value="">Select</option>
-                    {activeClassObj?.sections?.map((sec: any) => (
-                      <option key={sec._id} value={sec._id}>{sec.name}</option>
                     ))}
                   </select>
                 </div>
@@ -252,8 +235,8 @@ export const StudentManagement: React.FC = () => {
               </div>
 
               <div className="pt-3 flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
-                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">Complete Registration</button>
+                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">{t('cancel')}</button>
+                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">{t('save')}</button>
               </div>
             </form>
           </div>

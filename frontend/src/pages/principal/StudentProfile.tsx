@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../../services/api';
-import { UserCheck, Phone, CalendarCheck, Edit, ShieldAlert, Check, X } from 'lucide-react';
+import { UserCheck, Phone, CalendarCheck, X } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const StudentProfile: React.FC = () => {
+  const { t, language } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export const StudentProfile: React.FC = () => {
                 Adm No: {student.admissionNumber}
               </span>
               <span className="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded">
-                {currentEnrollment?.classId?.name} - {currentEnrollment?.sectionId?.name} (Roll: {currentEnrollment?.rollNumber})
+                {currentEnrollment?.classId?.name} (Roll: {currentEnrollment?.rollNumber})
               </span>
             </div>
           </div>
@@ -78,11 +80,11 @@ export const StudentProfile: React.FC = () => {
             <h4 className="text-lg font-bold text-slate-900">{attendanceSummary?.totalDays || 0}</h4>
           </div>
           <div className="text-center px-3 border-r border-slate-200">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Present</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400">{t('present')}</span>
             <h4 className="text-lg font-bold text-emerald-600">{attendanceSummary?.presentDays || 0}</h4>
           </div>
           <div className="text-center px-3 border-r border-slate-200">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Absent</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400">{t('absent')}</span>
             <h4 className="text-lg font-bold text-rose-600">{attendanceSummary?.absentDays || 0}</h4>
           </div>
           <div className="text-center px-3">
@@ -107,7 +109,7 @@ export const StudentProfile: React.FC = () => {
                   <h4 className="font-bold text-slate-900">{g.fullName} ({g.relationship})</h4>
                   {g.isPrimaryGuardian && (
                     <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded border border-amber-300">
-                      Primary Guardian (SMS Receiver)
+                      Primary Guardian (SMS Target)
                     </span>
                   )}
                 </div>
@@ -129,7 +131,7 @@ export const StudentProfile: React.FC = () => {
               <div key={e._id} className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
                 <div>
                   <span className="font-bold text-emerald-800">{e.academicYearId?.name}</span>
-                  <p className="text-slate-600">{e.classId?.name} - {e.sectionId?.name} (Roll: {e.rollNumber})</p>
+                  <p className="text-slate-600">{e.classId?.name} (Roll: {e.rollNumber})</p>
                 </div>
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
                   {e.status}
@@ -182,7 +184,7 @@ export const StudentProfile: React.FC = () => {
                       }}
                       className="text-xs font-semibold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded border border-amber-200"
                     >
-                      Override Status
+                      {t('overrideStatus')}
                     </button>
                   </td>
                 </tr>
@@ -228,7 +230,7 @@ export const StudentProfile: React.FC = () => {
                 />
               </div>
               <div className="pt-2 flex justify-end space-x-2">
-                <button type="button" onClick={() => setOverrideModal(null)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
+                <button type="button" onClick={() => setOverrideModal(null)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">{t('cancel')}</button>
                 <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg">Confirm Override</button>
               </div>
             </form>

@@ -20,7 +20,7 @@ export interface Teacher {
   joiningDate?: string;
   status: 'ACTIVE' | 'INACTIVE';
   photoUrl?: string;
-  classTeacherSections?: Section[];
+  classTeacherClasses?: ClassItem[];
   subjectAssignments?: SubjectAssignment[];
 }
 
@@ -37,18 +37,9 @@ export interface ClassItem {
   _id: string;
   name: string;
   code: string;
-  status: 'ACTIVE' | 'INACTIVE';
-  sections?: Section[];
-  studentCount?: number;
-}
-
-export interface Section {
-  _id: string;
-  classId: string | ClassItem;
-  name: string;
-  academicYearId: string;
   classTeacherId?: Teacher;
   status: 'ACTIVE' | 'INACTIVE';
+  studentCount?: number;
 }
 
 export interface Subject {
@@ -63,7 +54,6 @@ export interface SubjectAssignment {
   _id: string;
   academicYearId: string;
   classId: ClassItem;
-  sectionId: Section;
   subjectId: Subject;
   teacherId: Teacher;
 }

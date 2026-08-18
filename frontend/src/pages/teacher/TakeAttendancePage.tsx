@@ -2,16 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { ClassItem, StudentRosterItem } from '../../types';
-import { Calendar, CheckCircle2, XCircle, RefreshCw, Send, AlertTriangle, Check, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Send, AlertTriangle, Check, X } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export const TakeAttendancePage: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
 
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [selectedClassId, setSelectedClassId] = useState(searchParams.get('classId') || '');
-  const [selectedSectionId, setSelectedSectionId] = useState(searchParams.get('sectionId') || '');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const [roster, setRoster] = useState<StudentRosterItem[]>([]);
@@ -26,26 +25,15 @@ export const TakeAttendancePage: React.FC = () => {
       setClasses(res.data);
       if (!selectedClassId && res.data.length > 0) {
         setSelectedClassId(res.data[0]._id);
-        if (res.data[0].sections?.length > 0) {
-          setSelectedSectionId(res.data[0].sections[0]._id);
-        }
       }
     });
   }, []);
 
-  const selectedClassObj = classes.find((c) => c._id === selectedClassId);
-
-  useEffect(() => {
-    if (selectedClassId && selectedClassObj?.sections?.length && !selectedSectionId) {
-      setSelectedSectionId(selectedClassObj.sections[0]._id);
-    }
-  }, [selectedClassId, selectedClassObj]);
-
   const fetchRoster = () => {
-    if (!selectedClassId || !selectedSectionId) return;
+    if (!selectedClassId) return;
     setLoading(true);
     api.get('/attendance/roster', {
-      params: { classId: selectedClassId, sectionId: selectedSectionId, date },
+      params: { classId: selectedClassId, date },
     })
       .then((res: any) => {
         const students: StudentRosterItem[] = res.data.students || [];
@@ -65,7 +53,7 @@ export const TakeAttendancePage: React.FC = () => {
 
   useEffect(() => {
     fetchRoster();
-  }, [selectedClassId, selectedSectionId, date]);
+  }, [selectedClassId, date]);
 
   const handleStatusToggle = (studentId: string, status: 'PRESENT' | 'ABSENT') => {
     setAttendanceState((prev) => ({ ...prev, [studentId]: status }));
@@ -92,7 +80,6 @@ export const TakeAttendancePage: React.FC = () => {
     try {
       const payload = {
         classId: selectedClassId,
-        sectionId: selectedSectionId,
         date,
         attendance: roster.map((s) => ({
           studentId: s.studentId,
@@ -102,7 +89,7 @@ export const TakeAttendancePage: React.FC = () => {
 
       await api.post('/attendance/submit', payload);
       setShowConfirmModal(false);
-      alert('Attendance submitted successfully! Absent SMS queued to guardians.');
+      alert(language === 'bn' ? 'উপস্থিতি সফলভাবে সেভ হয়েছে এবং অনুপস্থিত ছাত্রদের অভিভাবকদের কাছে এসএমএস পাঠানো হয়েছে।' : 'Attendance submitted successfully! Absent SMS queued to guardians.');
       fetchRoster();
     } catch (err: any) {
       alert(err.message || 'Attendance submission failed');
@@ -118,38 +105,24 @@ export const TakeAttendancePage: React.FC = () => {
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Rapid Class Attendance Entry</h1>
-          <p className="text-xs text-slate-500 font-medium">Select Class, Section & Mark Attendance for Students</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('takeAttendance')}</h1>
+          <p className="text-xs text-slate-500 font-medium">
+            {language === 'bn' ? 'শ্রেণি ও তারিখ নির্বাচন করে উপস্থিতি মার্ক করুন' : 'Select Class & Date to Mark Attendance for Students'}
+          </p>
         </div>
       </div>
 
       {/* Selector Toolbar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">Select Class</label>
           <select
             value={selectedClassId}
-            onChange={(e) => {
-              setSelectedClassId(e.target.value);
-              setSelectedSectionId('');
-            }}
+            onChange={(e) => setSelectedClassId(e.target.value)}
             className="w-full text-xs p-2 border rounded-lg bg-white font-semibold text-slate-800"
           >
             {classes.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Select Section</label>
-          <select
-            value={selectedSectionId}
-            onChange={(e) => setSelectedSectionId(e.target.value)}
-            className="w-full text-xs p-2 border rounded-lg bg-white font-semibold text-slate-800"
-          >
-            {selectedClassObj?.sections?.map((sec: any) => (
-              <option key={sec._id} value={sec._id}>{sec.name}</option>
             ))}
           </select>
         </div>
@@ -174,7 +147,7 @@ export const TakeAttendancePage: React.FC = () => {
             className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg shadow transition flex items-center space-x-1"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Mark All Present</span>
+            <span>{t('markAllPresent')}</span>
           </button>
           <button
             type="button"
@@ -182,13 +155,13 @@ export const TakeAttendancePage: React.FC = () => {
             className="bg-rose-700 hover:bg-rose-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg shadow transition flex items-center space-x-1"
           >
             <XCircle className="w-3.5 h-3.5" />
-            <span>Mark All Absent</span>
+            <span>{t('markAllAbsent')}</span>
           </button>
         </div>
 
         <div className="flex items-center space-x-3 text-xs font-bold text-slate-700">
-          <span>Present: <span className="text-emerald-700">{presentCount}</span></span>
-          <span>Absent: <span className="text-rose-700">{absentCount}</span></span>
+          <span>{t('present')}: <span className="text-emerald-700">{presentCount}</span></span>
+          <span>{t('absent')}: <span className="text-rose-700">{absentCount}</span></span>
           <span>Total: <span className="text-slate-900">{roster.length}</span></span>
         </div>
       </div>
@@ -198,7 +171,7 @@ export const TakeAttendancePage: React.FC = () => {
         {loading ? (
           <div className="p-8 text-center text-slate-400">Loading student roster...</div>
         ) : roster.length === 0 ? (
-          <div className="p-8 text-center text-slate-400">No active students found in this class section.</div>
+          <div className="p-8 text-center text-slate-400">No active students found in this class.</div>
         ) : (
           <div className="divide-y divide-slate-100">
             {roster.map((student) => {
@@ -235,7 +208,7 @@ export const TakeAttendancePage: React.FC = () => {
                       }`}
                     >
                       <Check className="w-3.5 h-3.5" />
-                      <span>Present</span>
+                      <span>{t('present')}</span>
                     </button>
 
                     <button
@@ -248,7 +221,7 @@ export const TakeAttendancePage: React.FC = () => {
                       }`}
                     >
                       <X className="w-3.5 h-3.5" />
-                      <span>Absent</span>
+                      <span>{t('absent')}</span>
                     </button>
                   </div>
                 </div>
@@ -264,7 +237,7 @@ export const TakeAttendancePage: React.FC = () => {
           <div>
             <p className="text-xs text-slate-300">Ready to save daily attendance record?</p>
             <p className="text-xs font-bold text-amber-400">
-              Present: {presentCount} | Absent: {absentCount}
+              {t('present')}: {presentCount} | {t('absent')}: {absentCount}
             </p>
           </div>
           <button
@@ -273,7 +246,7 @@ export const TakeAttendancePage: React.FC = () => {
             className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs px-6 py-2.5 rounded-lg transition shadow-lg flex items-center space-x-2"
           >
             <Send className="w-4 h-4" />
-            <span>Submit Attendance</span>
+            <span>{t('submitAttendance')}</span>
           </button>
         </div>
       )}
@@ -283,7 +256,7 @@ export const TakeAttendancePage: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-base text-slate-900">Attendance Submission Summary</h3>
+              <h3 className="font-bold text-base text-slate-900">{t('confirmAttendance')}</h3>
               <button onClick={() => setShowConfirmModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
@@ -323,7 +296,7 @@ export const TakeAttendancePage: React.FC = () => {
                 onClick={() => setShowConfirmModal(false)}
                 className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 type="button"
@@ -331,7 +304,7 @@ export const TakeAttendancePage: React.FC = () => {
                 onClick={handleSubmitAttendance}
                 className="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow"
               >
-                {submitting ? 'Submitting...' : 'Confirm & Submit'}
+                {submitting ? 'Submitting...' : t('confirmAttendance')}
               </button>
             </div>
           </div>

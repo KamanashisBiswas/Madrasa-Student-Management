@@ -3,7 +3,7 @@ import { connectDB, disconnectDB } from '../config/db.js';
 import { User } from '../models/User.js';
 import { AcademicYear } from '../models/AcademicYear.js';
 import { Teacher } from '../models/Teacher.js';
-import { ClassModel, Section } from '../models/Class.js';
+import { ClassModel } from '../models/Class.js';
 import { Subject, SubjectAssignment } from '../models/Subject.js';
 import { Student, Guardian, StudentGuardian, StudentEnrollment } from '../models/Student.js';
 import { ClassAttendance } from '../models/Attendance.js';
@@ -21,7 +21,6 @@ export const seedDatabase = async () => {
     AcademicYear.deleteMany({}),
     Teacher.deleteMany({}),
     ClassModel.deleteMany({}),
-    Section.deleteMany({}),
     Subject.deleteMany({}),
     SubjectAssignment.deleteMany({}),
     Student.deleteMany({}),
@@ -47,7 +46,7 @@ export const seedDatabase = async () => {
     attendanceEditWindowMinutes: 30,
   });
 
-  // 2. Create Principal Account (Only Login Roles: PRINCIPAL & TEACHER)
+  // 2. Create Principal Account
   const principalPassword = await bcrypt.hash('principal123', 10);
   const principalUser = await User.create({
     email: 'principal@madrasah.edu',
@@ -65,7 +64,7 @@ export const seedDatabase = async () => {
     isArchived: false,
   });
 
-  // 4. Create Teachers (Login Role: TEACHER)
+  // 4. Create Teachers
   const teacherPassword = await bcrypt.hash('teacher123', 10);
 
   const teacherData = [
@@ -98,26 +97,20 @@ export const seedDatabase = async () => {
     createdTeachers.push(teacher);
   }
 
-  // 5. Create Classes and Sections
+  // 5. Create Classes and Assign Class Teachers Directly
   const classesData = [
-    { name: 'Class 6', code: 'C6' },
-    { name: 'Class 7', code: 'C7' },
-    { name: 'Class 8', code: 'C8' },
+    { name: 'Class 6', code: 'C6', classTeacherId: createdTeachers[0]._id }, // Abdullah Sir
+    { name: 'Class 7', code: 'C7', classTeacherId: createdTeachers[1]._id }, // Rahman Sir
+    { name: 'Class 8', code: 'C8', classTeacherId: createdTeachers[2]._id }, // Karim Sir
   ];
 
-  const createdSections: any[] = [];
+  const createdClasses: any[] = [];
   for (let i = 0; i < classesData.length; i++) {
     const c = await ClassModel.create(classesData[i]);
-    const sectionA = await Section.create({
-      classId: c._id,
-      name: 'Section A',
-      academicYearId: academicYear._id,
-      classTeacherId: createdTeachers[i % createdTeachers.length]._id,
-    });
-    createdSections.push({ class: c, section: sectionA });
+    createdClasses.push(c);
   }
 
-  // 6. Create Subjects and Assignments
+  // 6. Create Subjects and Assignments directly per Class
   const subjectsData = [
     { name: 'Quran & Hadith', code: 'QRN-101' },
     { name: 'Bangla Language', code: 'BNG-101' },
@@ -132,32 +125,29 @@ export const seedDatabase = async () => {
     createdSubjects.push(subj);
   }
 
-  // Assign Subject Teachers for Class 6 Section A
+  // Assign Subject Teachers for Class 6
   await SubjectAssignment.create([
     {
       academicYearId: academicYear._id,
-      classId: createdSections[0].class._id,
-      sectionId: createdSections[0].section._id,
+      classId: createdClasses[0]._id,
       subjectId: createdSubjects[0]._id,
       teacherId: createdTeachers[0]._id, // Abdullah Sir
     },
     {
       academicYearId: academicYear._id,
-      classId: createdSections[0].class._id,
-      sectionId: createdSections[0].section._id,
+      classId: createdClasses[0]._id,
       subjectId: createdSubjects[1]._id,
       teacherId: createdTeachers[1]._id, // Rahman Sir
     },
     {
       academicYearId: academicYear._id,
-      classId: createdSections[0].class._id,
-      sectionId: createdSections[0].section._id,
+      classId: createdClasses[0]._id,
       subjectId: createdSubjects[2]._id,
       teacherId: createdTeachers[2]._id, // Karim Sir
     },
   ]);
 
-  // 7. Create Sample Students and Guardians (No User login accounts needed)
+  // 7. Create Sample Students and Guardians directly in Class 6
   const studentsData = [
     { name: 'Hasan Al-Mahmud', bengaliName: 'হাসান আল-মাহমুদ', guardianName: 'Md. Rafiqul Islam', mobile: '01811111111', roll: 1 },
     { name: 'Karim Ullah', bengaliName: 'করিম উল্লাহ', guardianName: 'Md. Shafiqul Alam', mobile: '01822222222', roll: 2 },
@@ -199,8 +189,7 @@ export const seedDatabase = async () => {
     await StudentEnrollment.create({
       studentId: student._id,
       academicYearId: academicYear._id,
-      classId: createdSections[0].class._id,
-      sectionId: createdSections[0].section._id,
+      classId: createdClasses[0]._id,
       rollNumber: s.roll,
       status: 'ACTIVE',
     });

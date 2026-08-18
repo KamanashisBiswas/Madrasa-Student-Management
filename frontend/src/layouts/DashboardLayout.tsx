@@ -33,23 +33,23 @@ export const DashboardLayout: React.FC = () => {
 
   const role = user?.role || 'TEACHER';
 
-  // Navigation Items per Role (Version 1: PRINCIPAL & TEACHER)
+  // Dynamic Translated Navigation Items per Role
   const navItems = {
     PRINCIPAL: [
-      { path: '/principal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { path: '/principal/teachers', label: 'Teacher Management', icon: Users },
-      { path: '/principal/classes', label: 'Class & Sections', icon: GraduationCap },
-      { path: '/principal/subjects', label: 'Subject Management', icon: BookOpen },
-      { path: '/principal/students', label: 'Student Directory', icon: UserCheck },
-      { path: '/principal/attendance', label: 'Class Attendance', icon: CalendarCheck },
-      { path: '/principal/sms-logs', label: 'SMS Logs', icon: MessageSquare },
-      { path: '/principal/sms-settings', label: 'SMS Settings', icon: Settings },
-      { path: '/principal/audit-logs', label: 'Audit Trail', icon: ShieldCheck },
+      { path: '/principal/dashboard', label: t('principalDashboard'), icon: LayoutDashboard },
+      { path: '/principal/teachers', label: t('teacherManagement'), icon: Users },
+      { path: '/principal/classes', label: t('classManagement'), icon: GraduationCap },
+      { path: '/principal/subjects', label: t('subjectManagement'), icon: BookOpen },
+      { path: '/principal/students', label: t('studentDirectory'), icon: UserCheck },
+      { path: '/principal/attendance', label: t('classAttendance'), icon: CalendarCheck },
+      { path: '/principal/sms-logs', label: t('smsLogs'), icon: MessageSquare },
+      { path: '/principal/sms-settings', label: t('smsSettings'), icon: Settings },
+      { path: '/principal/audit-logs', label: t('auditTrail'), icon: ShieldCheck },
     ],
     TEACHER: [
-      { path: '/teacher/dashboard', label: 'My Dashboard', icon: LayoutDashboard },
-      { path: '/teacher/take-attendance', label: 'Take Attendance', icon: CalendarCheck },
-      { path: '/teacher/students', label: 'Assigned Students', icon: Users },
+      { path: '/teacher/dashboard', label: t('teacherDashboard'), icon: LayoutDashboard },
+      { path: '/teacher/take-attendance', label: t('takeAttendance'), icon: CalendarCheck },
+      { path: '/teacher/students', label: t('assignedStudents'), icon: Users },
     ],
   }[role] || [];
 
@@ -65,7 +65,7 @@ export const DashboardLayout: React.FC = () => {
           <div>
             <h2 className="font-bold text-sm leading-tight text-emerald-100">{t('appName')}</h2>
             <span className="text-[10px] tracking-wider uppercase font-semibold text-amber-400 bg-emerald-900/60 px-1.5 py-0.5 rounded border border-emerald-800">
-              {role}
+              {role === 'PRINCIPAL' ? (language === 'bn' ? 'অধ্যক্ষ' : 'PRINCIPAL') : (language === 'bn' ? 'শিক্ষক' : 'TEACHER')}
             </span>
           </div>
         </div>
@@ -136,7 +136,7 @@ export const DashboardLayout: React.FC = () => {
               className="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-2.5 py-1.5 rounded-md transition border border-slate-200"
             >
               <Globe className="w-3.5 h-3.5 text-emerald-600" />
-              <span>{language === 'bn' ? 'English' : 'বাংলা'}</span>
+              <span className="font-bold text-emerald-800">{language === 'bn' ? 'English' : 'বাংলা'}</span>
             </button>
 
             {/* Notifications badge */}

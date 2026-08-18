@@ -14,7 +14,6 @@ const createSubjectSchema = z.object({
 const assignSubjectSchema = z.object({
   academicYearId: z.string().optional(),
   classId: z.string().min(1),
-  sectionId: z.string().min(1),
   subjectId: z.string().min(1),
   teacherId: z.string().min(1),
 });
@@ -51,7 +50,6 @@ export const getSubjectAssignments = async (req: Request, res: Response, next: N
 
     const assignments = await SubjectAssignment.find({ academicYearId: activeYear._id })
       .populate('classId')
-      .populate('sectionId')
       .populate('subjectId')
       .populate('teacherId');
 
@@ -63,7 +61,7 @@ export const getSubjectAssignments = async (req: Request, res: Response, next: N
 
 export const assignSubjectTeacher = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { academicYearId, classId, sectionId, subjectId, teacherId } = assignSubjectSchema.parse(req.body);
+    const { academicYearId, classId, subjectId, teacherId } = assignSubjectSchema.parse(req.body);
 
     let yearId = academicYearId;
     if (!yearId) {
@@ -75,12 +73,11 @@ export const assignSubjectTeacher = async (req: Request, res: Response, next: Ne
     }
 
     const assignment = await SubjectAssignment.findOneAndUpdate(
-      { academicYearId: yearId, classId, sectionId, subjectId },
+      { academicYearId: yearId, classId, subjectId },
       { teacherId },
       { upsert: true, new: true }
     )
       .populate('classId')
-      .populate('sectionId')
       .populate('subjectId')
       .populate('teacherId');
 

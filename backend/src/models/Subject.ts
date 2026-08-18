@@ -12,7 +12,6 @@ export interface ISubject extends Document {
 export interface ISubjectAssignment extends Document {
   academicYearId: mongoose.Types.ObjectId;
   classId: mongoose.Types.ObjectId;
-  sectionId: mongoose.Types.ObjectId;
   subjectId: mongoose.Types.ObjectId;
   teacherId: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -33,7 +32,6 @@ const subjectAssignmentSchema = new Schema<ISubjectAssignment>(
   {
     academicYearId: { type: Schema.Types.ObjectId, ref: 'AcademicYear', required: true },
     classId: { type: Schema.Types.ObjectId, ref: 'Class', required: true },
-    sectionId: { type: Schema.Types.ObjectId, ref: 'Section', required: true },
     subjectId: { type: Schema.Types.ObjectId, ref: 'Subject', required: true },
     teacherId: { type: Schema.Types.ObjectId, ref: 'Teacher', required: true },
   },
@@ -41,7 +39,7 @@ const subjectAssignmentSchema = new Schema<ISubjectAssignment>(
 );
 
 subjectAssignmentSchema.index(
-  { academicYearId: 1, classId: 1, sectionId: 1, subjectId: 1 },
+  { academicYearId: 1, classId: 1, subjectId: 1 },
   { unique: true }
 );
 

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { Subject, SubjectAssignment, ClassItem, Teacher } from '../../types';
 import { Plus, BookOpen, X } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const SubjectManagement: React.FC = () => {
+  const { t, language } = useLanguage();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [assignments, setAssignments] = useState<SubjectAssignment[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
@@ -17,7 +19,6 @@ export const SubjectManagement: React.FC = () => {
   const [code, setCode] = useState('');
 
   const [selectedClassId, setSelectedClassId] = useState('');
-  const [selectedSectionId, setSelectedSectionId] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
 
@@ -61,7 +62,6 @@ export const SubjectManagement: React.FC = () => {
     try {
       await api.post('/subjects/assignments', {
         classId: selectedClassId,
-        sectionId: selectedSectionId,
         subjectId: selectedSubjectId,
         teacherId: selectedTeacherId,
       });
@@ -72,14 +72,14 @@ export const SubjectManagement: React.FC = () => {
     }
   };
 
-  const selectedClass = classes.find((c) => c._id === selectedClassId);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Subject & Subject Teacher Management</h1>
-          <p className="text-xs text-slate-500 font-medium">Manage Academic Subjects and Assign Subject Teachers</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('subjectManagement')}</h1>
+          <p className="text-xs text-slate-500 font-medium">
+            {language === 'bn' ? 'মাদ্রাসার বিষয় ও বিষয় শিক্ষক নির্ধারণ করুন' : 'Manage Academic Subjects and Assign Subject Teachers'}
+          </p>
         </div>
         <div className="flex space-x-2">
           <button
@@ -87,14 +87,14 @@ export const SubjectManagement: React.FC = () => {
             className="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2.5 rounded-lg shadow transition"
           >
             <Plus className="w-4 h-4" />
-            <span>Create Subject</span>
+            <span>{t('createSubject')}</span>
           </button>
           <button
             onClick={() => setShowAssignModal(true)}
             className="inline-flex items-center space-x-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2.5 rounded-lg shadow transition"
           >
             <Plus className="w-4 h-4" />
-            <span>Assign Subject Teacher</span>
+            <span>{t('assignSubjectTeacher')}</span>
           </button>
         </div>
       </div>
@@ -103,7 +103,9 @@ export const SubjectManagement: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* All Subjects List */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <h3 className="font-bold text-slate-800 text-sm">Master Subjects Directory</h3>
+          <h3 className="font-bold text-slate-800 text-sm">
+            {language === 'bn' ? 'সকল বিষয়ের তালিকা' : 'Master Subjects Directory'}
+          </h3>
           <div className="divide-y divide-slate-100">
             {subjects.map((sub) => (
               <div key={sub._id} className="py-2.5 flex items-center justify-between">
@@ -124,7 +126,9 @@ export const SubjectManagement: React.FC = () => {
 
         {/* Current Subject Teacher Assignments */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <h3 className="font-bold text-slate-800 text-sm">Subject Teacher Assignment Matrix</h3>
+          <h3 className="font-bold text-slate-800 text-sm">
+            {language === 'bn' ? 'বিষয় শিক্ষক ম্যাট্রিক্স' : 'Subject Teacher Assignment Matrix'}
+          </h3>
           <div className="divide-y divide-slate-100">
             {assignments.length === 0 ? (
               <p className="text-xs text-slate-400 py-4 text-center">No subject assignments created yet.</p>
@@ -133,9 +137,7 @@ export const SubjectManagement: React.FC = () => {
                 <div key={ass._id} className="py-2.5 flex items-center justify-between text-xs">
                   <div>
                     <span className="font-bold text-slate-900">{ass.subjectId?.name}</span>
-                    <p className="text-[11px] text-slate-500">
-                      {ass.classId?.name} - {ass.sectionId?.name}
-                    </p>
+                    <p className="text-[11px] text-slate-500">{ass.classId?.name}</p>
                   </div>
                   <div className="text-right">
                     <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
@@ -154,7 +156,7 @@ export const SubjectManagement: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-base text-slate-900">Create New Subject</h3>
+              <h3 className="font-bold text-base text-slate-900">{t('createSubject')}</h3>
               <button onClick={() => setShowSubjectModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
@@ -169,8 +171,8 @@ export const SubjectManagement: React.FC = () => {
                 <input required value={code} onChange={(e) => setCode(e.target.value)} className="w-full text-sm p-2 border rounded-lg" placeholder="MATH-101" />
               </div>
               <div className="pt-2 flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowSubjectModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
-                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">Save Subject</button>
+                <button type="button" onClick={() => setShowSubjectModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">{t('cancel')}</button>
+                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">{t('save')}</button>
               </div>
             </form>
           </div>
@@ -182,7 +184,7 @@ export const SubjectManagement: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-base text-slate-900">Assign Subject Teacher</h3>
+              <h3 className="font-bold text-base text-slate-900">{t('assignSubjectTeacher')}</h3>
               <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
@@ -193,30 +195,12 @@ export const SubjectManagement: React.FC = () => {
                 <select
                   required
                   value={selectedClassId}
-                  onChange={(e) => {
-                    setSelectedClassId(e.target.value);
-                    setSelectedSectionId('');
-                  }}
+                  onChange={(e) => setSelectedClassId(e.target.value)}
                   className="w-full text-sm p-2 border rounded-lg bg-white"
                 >
                   <option value="">-- Select Class --</option>
                   {classes.map((c) => (
                     <option key={c._id} value={c._id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Section</label>
-                <select
-                  required
-                  value={selectedSectionId}
-                  onChange={(e) => setSelectedSectionId(e.target.value)}
-                  className="w-full text-sm p-2 border rounded-lg bg-white"
-                >
-                  <option value="">-- Select Section --</option>
-                  {selectedClass?.sections?.map((sec: any) => (
-                    <option key={sec._id} value={sec._id}>{sec.name}</option>
                   ))}
                 </select>
               </div>
@@ -252,8 +236,8 @@ export const SubjectManagement: React.FC = () => {
               </div>
 
               <div className="pt-2 flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowAssignModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
-                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">Assign Teacher</button>
+                <button type="button" onClick={() => setShowAssignModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">{t('cancel')}</button>
+                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">{t('save')}</button>
               </div>
             </form>
           </div>

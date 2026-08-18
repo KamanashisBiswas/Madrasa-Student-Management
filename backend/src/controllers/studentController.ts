@@ -13,7 +13,6 @@ const registerStudentSchema = z.object({
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
   bloodGroup: z.string().optional(),
   classId: z.string().min(1, 'Class is required'),
-  sectionId: z.string().min(1, 'Section is required'),
   rollNumber: z.number().min(1, 'Roll number is required'),
   academicYearId: z.string().optional(),
 
@@ -31,7 +30,7 @@ const registerStudentSchema = z.object({
 
 export const getStudents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { search, classId, sectionId, academicYearId, status } = req.query;
+    const { search, classId, academicYearId, status } = req.query;
 
     let activeYearId = academicYearId as string;
     if (!activeYearId) {
@@ -44,12 +43,10 @@ export const getStudents = async (req: Request, res: Response, next: NextFunctio
     const enrollmentQuery: any = {};
     if (activeYearId) enrollmentQuery.academicYearId = activeYearId;
     if (classId) enrollmentQuery.classId = classId;
-    if (sectionId) enrollmentQuery.sectionId = sectionId;
 
     let enrollments = await StudentEnrollment.find(enrollmentQuery)
       .populate('studentId')
       .populate('classId')
-      .populate('sectionId')
       .populate('academicYearId')
       .sort({ rollNumber: 1 });
 
@@ -83,7 +80,6 @@ export const getStudents = async (req: Request, res: Response, next: NextFunctio
           student: student,
           rollNumber: e.rollNumber,
           class: e.classId,
-          section: e.sectionId,
           academicYear: e.academicYearId,
           primaryGuardian: sg ? sg.guardianId : null,
         };
@@ -114,7 +110,7 @@ export const registerStudent = async (req: Request, res: Response, next: NextFun
     const studentId = `STD-${currentYearStr}-${String(count + 1).padStart(3, '0')}`;
     const admissionNumber = `ADM-${currentYearStr}-${String(count + 1).padStart(3, '0')}`;
 
-    // Create Student record (No User login account created)
+    // Create Student record
     const student = await Student.create({
       studentId,
       admissionNumber,
@@ -126,7 +122,7 @@ export const registerStudent = async (req: Request, res: Response, next: NextFun
       status: 'ACTIVE',
     });
 
-    // Create or find Guardian record (No User login account created)
+    // Create or find Guardian record
     let guardian = await Guardian.findOne({ mobile: data.guardianMobile });
     if (!guardian) {
       guardian = await Guardian.create({
@@ -152,7 +148,6 @@ export const registerStudent = async (req: Request, res: Response, next: NextFun
       studentId: student._id,
       academicYearId: yearId,
       classId: data.classId,
-      sectionId: data.sectionId,
       rollNumber: data.rollNumber,
       status: 'ACTIVE',
     });
@@ -183,7 +178,6 @@ export const getStudentById = async (req: Request, res: Response, next: NextFunc
 
     const enrollments = await StudentEnrollment.find({ studentId: student._id })
       .populate('classId')
-      .populate('sectionId')
       .populate('academicYearId')
       .sort({ createdAt: -1 });
 

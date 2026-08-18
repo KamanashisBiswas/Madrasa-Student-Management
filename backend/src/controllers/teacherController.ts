@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import { Teacher } from '../models/Teacher.js';
 import { User } from '../models/User.js';
-import { Section } from '../models/Class.js';
+import { ClassModel } from '../models/Class.js';
 import { SubjectAssignment } from '../models/Subject.js';
 import { AcademicYear } from '../models/AcademicYear.js';
 import { sendResponse } from '../utils/apiResponse.js';
@@ -31,27 +31,25 @@ export const getTeachers = async (req: Request, res: Response, next: NextFunctio
 
     const result = await Promise.all(
       teachers.map(async (t) => {
-        let classTeacherSections: any[] = [];
+        let classTeacherClasses: any[] = [];
         let subjectAssignments: any[] = [];
 
         if (activeYear) {
-          classTeacherSections = await Section.find({
+          classTeacherClasses = await ClassModel.find({
             classTeacherId: t._id,
-            academicYearId: activeYear._id,
-          }).populate('classId');
+          });
 
           subjectAssignments = await SubjectAssignment.find({
             teacherId: t._id,
             academicYearId: activeYear._id,
           })
             .populate('classId')
-            .populate('sectionId')
             .populate('subjectId');
         }
 
         return {
           ...t.toObject(),
-          classTeacherSections,
+          classTeacherClasses,
           subjectAssignments,
         };
       })
@@ -125,21 +123,19 @@ export const getTeacherById = async (req: Request, res: Response, next: NextFunc
       activeYear = await AcademicYear.findOne().sort({ startDate: -1 });
     }
 
-    let classTeacherSections: any[] = [];
+    let classTeacherClasses: any[] = [];
     let subjectAssignments: any[] = [];
 
     if (activeYear) {
-      classTeacherSections = await Section.find({
+      classTeacherClasses = await ClassModel.find({
         classTeacherId: teacher._id,
-        academicYearId: activeYear._id,
-      }).populate('classId');
+      });
 
       subjectAssignments = await SubjectAssignment.find({
         teacherId: teacher._id,
         academicYearId: activeYear._id,
       })
         .populate('classId')
-        .populate('sectionId')
         .populate('subjectId');
     }
 
@@ -147,7 +143,7 @@ export const getTeacherById = async (req: Request, res: Response, next: NextFunc
       res,
       data: {
         ...teacher.toObject(),
-        classTeacherSections,
+        classTeacherClasses,
         subjectAssignments,
       },
     });
@@ -190,23 +186,21 @@ export const getMyClasses = async (req: AuthenticatedRequest, res: Response, nex
       return sendResponse({ res, data: [] });
     }
 
-    // Find sections where teacher is Class Teacher
-    const classTeacherSections = await Section.find({
+    // Find classes where teacher is Class Teacher
+    const classTeacherClasses = await ClassModel.find({
       classTeacherId: user.refId,
-      academicYearId: activeYear._id,
-    }).populate('classId');
+    });
 
-    // Find sections where teacher is Subject Teacher
+    // Find classes where teacher is Subject Teacher
     const subjectAssignments = await SubjectAssignment.find({
       teacherId: user.refId,
       academicYearId: activeYear._id,
     })
       .populate('classId')
-      .populate('sectionId')
       .populate('subjectId');
 
     const result = {
-      classTeacherSections,
+      classTeacherClasses,
       subjectAssignments,
     };
 

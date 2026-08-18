@@ -44,7 +44,6 @@ export interface IStudentEnrollment extends Document {
   studentId: mongoose.Types.ObjectId;
   academicYearId: mongoose.Types.ObjectId;
   classId: mongoose.Types.ObjectId;
-  sectionId: mongoose.Types.ObjectId;
   rollNumber: number;
   status: 'ACTIVE' | 'PROMOTED' | 'PASSED_OUT';
   admissionDate?: Date;
@@ -99,7 +98,6 @@ const studentEnrollmentSchema = new Schema<IStudentEnrollment>(
     studentId: { type: Schema.Types.ObjectId, ref: 'Student', required: true },
     academicYearId: { type: Schema.Types.ObjectId, ref: 'AcademicYear', required: true },
     classId: { type: Schema.Types.ObjectId, ref: 'Class', required: true },
-    sectionId: { type: Schema.Types.ObjectId, ref: 'Section', required: true },
     rollNumber: { type: Number, required: true },
     status: { type: String, enum: ['ACTIVE', 'PROMOTED', 'PASSED_OUT'], default: 'ACTIVE' },
     admissionDate: { type: Date, default: Date.now },
@@ -108,7 +106,7 @@ const studentEnrollmentSchema = new Schema<IStudentEnrollment>(
 );
 
 studentEnrollmentSchema.index({ academicYearId: 1, studentId: 1 }, { unique: true });
-studentEnrollmentSchema.index({ academicYearId: 1, classId: 1, sectionId: 1, rollNumber: 1 });
+studentEnrollmentSchema.index({ academicYearId: 1, classId: 1, rollNumber: 1 });
 
 export const Student = mongoose.model<IStudent>('Student', studentSchema);
 export const Guardian = mongoose.model<IGuardian>('Guardian', guardianSchema);

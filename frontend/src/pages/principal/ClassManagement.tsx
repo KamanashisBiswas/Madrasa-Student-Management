@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { ClassItem, Teacher } from '../../types';
-import { Plus, GraduationCap, UserCheck, X } from 'lucide-react';
+import { Plus, GraduationCap, X } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const ClassManagement: React.FC = () => {
+  const { t, language } = useLanguage();
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +16,7 @@ export const ClassManagement: React.FC = () => {
   const [className, setClassName] = useState('');
   const [classCode, setClassCode] = useState('');
 
-  const [selectedSectionId, setSelectedSectionId] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
 
   const loadData = () => {
@@ -35,15 +37,15 @@ export const ClassManagement: React.FC = () => {
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const created: any = await api.post('/classes', { name: className, code: classCode });
-      // Create Section A by default
-      await api.post('/classes/sections', {
-        classId: created.data._id,
-        name: 'Section A',
+      await api.post('/classes', {
+        name: className,
+        code: classCode,
+        classTeacherId: selectedTeacherId || undefined,
       });
       setShowClassModal(false);
       setClassName('');
       setClassCode('');
+      setSelectedTeacherId('');
       loadData();
     } catch (err: any) {
       alert(err.message || 'Failed to create class');
@@ -53,7 +55,7 @@ export const ClassManagement: React.FC = () => {
   const handleAssignClassTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.put(`/classes/sections/${selectedSectionId}/class-teacher`, {
+      await api.put(`/classes/${selectedClassId}/class-teacher`, {
         classTeacherId: selectedTeacherId,
       });
       setShowAssignModal(false);
@@ -67,15 +69,19 @@ export const ClassManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Class & Section Management</h1>
-          <p className="text-xs text-slate-500 font-medium">Define Classes and Assign Class Teachers</p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {language === 'bn' ? 'শ্রেণি ব্যবস্থাপনা' : 'Class Management'}
+          </h1>
+          <p className="text-xs text-slate-500 font-medium">
+            {language === 'bn' ? 'শ্রেণি তৈরি করুন এবং শ্রেণি শিক্ষক নির্ধারণ করুন' : 'Manage Academic Classes and Assign Class Teachers'}
+          </p>
         </div>
         <button
           onClick={() => setShowClassModal(true)}
           className="inline-flex items-center space-x-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow transition"
         >
           <Plus className="w-4 h-4" />
-          <span>Create New Class</span>
+          <span>{t('createClass')}</span>
         </button>
       </div>
 
@@ -98,31 +104,28 @@ export const ClassManagement: React.FC = () => {
             </div>
 
             <div className="space-y-2 border-t border-b border-slate-100 py-3 text-xs">
-              <h4 className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Sections & Class Teachers</h4>
-              {cls.sections?.map((sec: any) => (
-                <div key={sec._id} className="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200">
-                  <div>
-                    <span className="font-bold text-slate-900">{sec.name}</span>
-                    <p className="text-[11px] text-emerald-700 font-medium mt-0.5">
-                      Teacher: {sec.classTeacherId ? sec.classTeacherId.fullName : 'Not Assigned'}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSelectedSectionId(sec._id);
-                      setSelectedTeacherId(sec.classTeacherId?._id || '');
-                      setShowAssignModal(true);
-                    }}
-                    className="text-[10px] font-semibold text-emerald-800 hover:underline"
-                  >
-                    Change Teacher
-                  </button>
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-slate-700">{t('classTeacher')}:</span>
+                  <p className="text-xs text-emerald-700 font-bold mt-0.5">
+                    {cls.classTeacherId ? cls.classTeacherId.fullName : (language === 'bn' ? 'নির্ধারিত হয়নি' : 'Not Assigned')}
+                  </p>
                 </div>
-              ))}
+                <button
+                  onClick={() => {
+                    setSelectedClassId(cls._id);
+                    setSelectedTeacherId(cls.classTeacherId?._id || '');
+                    setShowAssignModal(true);
+                  }}
+                  className="text-xs font-semibold text-emerald-800 hover:underline bg-emerald-50 px-2 py-1 rounded border border-emerald-200"
+                >
+                  {language === 'bn' ? 'শিক্ষক পরিবর্তন' : 'Change Teacher'}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-              <span>Enrolled Students:</span>
+              <span>{t('totalStudents')}:</span>
               <span className="font-bold text-slate-900">{cls.studentCount || 0}</span>
             </div>
           </div>
@@ -134,7 +137,7 @@ export const ClassManagement: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-base text-slate-900">Create New Class</h3>
+              <h3 className="font-bold text-base text-slate-900">{t('createClass')}</h3>
               <button onClick={() => setShowClassModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
@@ -148,9 +151,22 @@ export const ClassManagement: React.FC = () => {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Class Code</label>
                 <input required value={classCode} onChange={(e) => setClassCode(e.target.value)} className="w-full text-sm p-2 border rounded-lg" placeholder="C6" />
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Assign Class Teacher (Optional)</label>
+                <select
+                  value={selectedTeacherId}
+                  onChange={(e) => setSelectedTeacherId(e.target.value)}
+                  className="w-full text-sm p-2 border rounded-lg bg-white"
+                >
+                  <option value="">-- Select Class Teacher --</option>
+                  {teachers.map((t) => (
+                    <option key={t._id} value={t._id}>{t.fullName} ({t.teacherId})</option>
+                  ))}
+                </select>
+              </div>
               <div className="pt-2 flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowClassModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
-                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">Create Class</button>
+                <button type="button" onClick={() => setShowClassModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">{t('cancel')}</button>
+                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">{t('save')}</button>
               </div>
             </form>
           </div>
@@ -162,7 +178,7 @@ export const ClassManagement: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-base text-slate-900">Assign Class Teacher</h3>
+              <h3 className="font-bold text-base text-slate-900">{t('assignClassTeacher')}</h3>
               <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
@@ -184,8 +200,8 @@ export const ClassManagement: React.FC = () => {
                 </select>
               </div>
               <div className="pt-2 flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowAssignModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">Cancel</button>
-                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">Save Assignment</button>
+                <button type="button" onClick={() => setShowAssignModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg">{t('cancel')}</button>
+                <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg">{t('save')}</button>
               </div>
             </form>
           </div>
