@@ -36,6 +36,8 @@ Suman/
 
 ## 📊 Entity-Relationship (ER) Diagram
 
+![Madrasah Management System ER Diagram](./er_diagram.png)
+
 ```mermaid
 erDiagram
     AcademicYear ||--o{ Class : "contains"
